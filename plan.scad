@@ -28,7 +28,7 @@ mon_psu  = [[g0.x + 20 * grid, 8], [114.5, 51.6, 30], "monitor", "y"];    // fir
 spool    = [22, 2, 35];                        // shir spool halves 2x2 (his default for power cords) at cell x 22, rows 0-1 and 3-4; post height
 lap_psu  = [[885, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; DC out left into the spool, AC right
 strip    = [[1047, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
-trunk    = [9, 34];                             // AC trunk: from cell 9, 34 cells, last row before the rail
+trunk    = [9, 32];                             // AC trunk: from cell 9, 4 x Open 8x, last row before the rail; right end open for the router DC
 boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [12, 6]], [[31, 1], [12, 5]]];  // A B C D1 = build.sh, D2 = user's printed 12x5 (rows 1-5); none under the clamp
 wall_y   = -20;                                 // ASSUMED: wall 20 mm behind the desk
 
@@ -46,7 +46,7 @@ module held(b) translate(P([b[0].x, b[0].y, 0])) rotate([0, 0, b[3] == "y" ? -90
         multmatrix(r ? [[0, 0, -1, 0], [1, 0, 0, 0], [0, -1, 0, 0]] : [[0, 0, 1, 0], [-1, 0, 0, 0], [0, -1, 0, 0]])
             color(printed()) import(str("build/holder_", b[2], ".stl"));
 }
-module run(r, row) for (k = [0:ceil(r[1] / 8) - 1]) translate(P([C(r[0] + k * 8, row).x, C(0, row).y + grid / 2, -3.4])) uw_channel(min(8, r[1] - k * 8));
+module run(r, row) for (k = [0:ceil(r[1] / 8) - 1]) translate(P([C(r[0] + k * 8, row).x, C(0, row).y + grid / 2, -3.4])) uw_channel(min(8, r[1] - k * 8), open = true);
 module cable(name, pts, c, d = 6) if (show_items) { echo(str(name, ": ", round(plen(pts) / 10), " cm")); cable_vis([for (p = pts) P(p)], c, d); }
 module plug(i) translate(P([sock(i), strip[0].y, -hold - strip[1].z])) rotate([0, 0, 180]) plug_vis();   // cord towards the trunk
 
@@ -89,15 +89,18 @@ W  = wall_y + 8;            // between desk and wall
 T  = C(0, 5).y + 14;        // trunk centre line
 Tz = -board - 9;            // inside a channel
 Rz = -board;                // router drawn one board lower
-cable("strip cord -> wall", [end(strip, false), [1037, row_c, -hold - 30], [1035, 140, Tz], [1027, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
+// Cord through the trunk's front wall at cell boundary i: Open channels have slots at inner boundaries only.
+function slot(i) = assert(i > trunk[0] && i < trunk[0] + trunk[1] && (i - trunk[0]) % 8 != 0, str("no slot at boundary ", i))
+    [C(i, 5).x, C(0, 5).y, Tz];
+cable("strip cord -> wall", [end(strip, false), [1037, row_c, -hold - 30], slot(29), [1010, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
 cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95 + Rz], [300, 30, -72 + Rz], [300, 50, -72 + Rz]], "#f4f4f4", 7);
 cable("LAN router -> closet", [[350, 50, -72 + Rz], [350, 30, -72 + Rz], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
-cable("router DC",  [[sock(5), row_c + 40, -hold - strip[1].z - 25], [sock(5) - 5, 120, -60], [sock(5) - 10, T + 4, Tz], [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]], "#555", 4);
+cable("router DC",  [[sock(5), row_c + 40, -hold - strip[1].z - 25], [sock(5) + 8, 125, -50], [C(trunk[0] + trunk[1], 0).x + 12, T + 4, Tz], [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]], "#555", 4);
 cable("speaker DC", [end(spk_psu, false), [spk_psu[0].x, W, -10], [spk_psu[0].x, W, 16], [440, 60, 40]], "#8e44ad", 4);
-cable("speaker AC", [end(spk_psu, true), [spk_psu[0].x, 128, -28], [spk_psu[0].x + 3, T - 4, Tz], [1050, T - 4, Tz], [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#8e44ad", 5);
+cable("speaker AC", [end(spk_psu, true), [spk_psu[0].x, 128, -28], slot(11), [530, T - 4, Tz], [1094, T - 4, Tz], slot(32), [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#8e44ad", 5);
 // Monitor DC: up the clamp, hidden in the arm's cable channels, into the socket on the monitor back (user). Under-desk part only.
 cable("monitor DC", [end(mon_psu, false), [mon_psu[0].x, W, -10], [740, W, 20], [712, W, 250]], "#d03a3a", 4);
-cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], [mon_psu[0].x + 3, T, Tz], [1096, T, Tz], [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#d03a3a", 5);
+cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], slot(20), [782, T, Tz], [1150, T, Tz], slot(34), [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#d03a3a", 5);
 // Laptop DC (measured 177 cm): out of the brick, N turns round the spool, up over the edge to the laptop.
 lap_dc   = 1770;
 laptop   = [780, 130, 360];   // ASSUMED: laptop on its stand: centre x, back edge y, width
@@ -122,4 +125,4 @@ lap_n    = turns(turns(turns(0)));                                        // exi
 assert(lap_n >= 1 && lap_n * cab_d <= spool[2], str("laptop DC: ", lap_n, " turns do not fit a ", spool[2], " mm post"));
 echo(str("laptop DC: ", round(lap_n * 10) / 10, " turns on the spool"));
 cable("laptop DC", concat(lap_in, [for (k = [0:ceil(lap_n * sp_turn / 8)]) wrap(min(k * 8 / sp_turn, lap_n))], lap_up(wrap(lap_n))), "#f07a2a", cab_d);
-cable("laptop AC",  [end(lap_psu, true), [1044, row_c, -28], [1044, 100, -28], [1042, T + 4, Tz], [1230, T + 4, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);
+cable("laptop AC",  [end(lap_psu, true), [1044, row_c, -28], [1046, 110, -28], slot(30), [1062, T + 4, Tz], [1206, T + 4, Tz], slot(36), [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);

@@ -66,7 +66,8 @@ module tiles_vis(n, m) color("#dcdcda") intersection() {          // the library
 // Place them 3.4 mm under the board's top face so the grips sit inside a 6.8 mm board.
 UW = "lib/underware-opengrid/";
 // Straight channel, n cells (1..8) along +x from x = 0, centred on y = 0.
-module uw_channel(n) color(PRINTED) translate([0, 0, -22]) rotate([0, 0, -90]) translate([-30 * (n - 1), 28, 0])
-    import(str(UW, "3mf/openGrid Underware ", n, "x Channel.3mf"));
+// open: "Open" variant (n >= 2), a cord slot ~13 wide x 14 deep in both walls at every inner cell boundary.
+module uw_channel(n, open = false) color(PRINTED) translate([0, 0, -22]) rotate([0, 0, -90]) translate([-30 * (n - 1), 28, 0])
+    import(str(UW, "3mf/openGrid Underware ", open ? "Open " : "", n, "x Channel.3mf"));
 // Double-sided cable hook, 2 cells wide, centred.
 module uw_hook2() color(PRINTED) translate([0, 7.3, -28]) import(str(UW, "stl/openGrid Underware Hook - Double-Sided 2W 10mm Cable.stl"));
