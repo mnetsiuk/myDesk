@@ -29,7 +29,7 @@ spool    = [22, 2, 35];                        // shir spool halves 2x2 (his def
 lap_psu  = [[885, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; DC out left into the spool, AC right
 strip    = [[1047, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
 trunk    = [9, 34];                             // AC trunk: from cell 9, 34 cells, last row before the rail
-boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [12, 6]], [[31, 0], [12, 6]]];  // A B C D1 D2 = build.sh; none under the clamp
+boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [12, 6]], [[31, 1], [12, 5]]];  // A B C D1 = build.sh, D2 = user's printed 12x5 (rows 1-5); none under the clamp
 wall_y   = -20;                                 // ASSUMED: wall 20 mm behind the desk
 
 function P(p) = [-800 + p.x, 400 - p.y, top_z + p.z];

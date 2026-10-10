@@ -29,6 +29,6 @@ board A  9 6 "By Row and Column"   # cells 0-8:   router
 board B  7 6 "By Row and Column"   # cells 9-15:  speaker brick
 board C  3 4 "Corners"             # cells 16-18, rows 2-5: in front of the clamp
 board D1 12 6 "By Row and Column"  # cells 19-30: monitor, spool, laptop
-board D2 12 6 "By Row and Column"  # cells 31-42: strip
+# D2 (cells 31-42, rows 1-5): the user already has a printed 12x5 board, nothing to print
 
 for p in left right; do openscad -q -o build/cheek_$p.stl -D "part=\"$p\"" router_mount.scad; done
