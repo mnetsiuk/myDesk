@@ -24,7 +24,7 @@ clamp    = [[677.5, 0], [45, 55, 40]];          // monitor arm clamp at 700, low
 rtr_psu  = [80, 54, 33.3];                      // plug-in adapter: sits straight in strip socket 5
 spk_psu  = [[g0.x + 10 * grid, 8], [110, 50, 30], "speaker", "y"];        // ASSUMED: speaker brick, will be replaced
 mon_psu  = [[g0.x + 20 * grid, 8], [114.5, 51.6, 30], "monitor", "y"];    // first slot centre right of the clamp
-lap_psu  = [[809, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across
+lap_psu  = [[809, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; AC in left, DC out right
 strip    = [[980, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
 coilbox  = [[1340, g0.y + 2.5 * grid], [95, 95, 22], "coil", "x", [1]];  // one cup, open towards the slack run: pocket for the hank
 trunk    = [9, 31];                             // AC trunk: from cell 9, 31 cells, last row before the rail
@@ -96,8 +96,13 @@ cable("speaker DC", [end(spk_psu, false), [spk_psu[0].x, W, -10], [spk_psu[0].x,
 cable("speaker AC", [end(spk_psu, true), [spk_psu[0].x, 128, -28], [spk_psu[0].x + 3, T - 4, Tz], [1050, T - 4, Tz], [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#8e44ad", 5);
 cable("monitor DC", [end(mon_psu, false), [mon_psu[0].x, W, -10], [740, W, 20], [712, W, 250]], "#d03a3a", 4);
 cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], [mon_psu[0].x + 3, T, Tz], [1096, T, Tz], [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#d03a3a", 5);
-cable("laptop DC",  [end(lap_psu, false), [800, row_c, -28], [800, S - 5, Tz], [1335, S - 5, Tz], K + [-40, 0, 0], K + [0, -40, 0], K + [40, 0, 0], K + [0, 40, 0], [1345, S + 5, Tz], [805, S + 5, Tz],
-                     [797, row_c + 10, -28], [797, W, -10], [795, W, 16], [800, 30, 35], [800, 230, 70]], "#f07a2a", 5);
-cable("laptop AC",  [end(lap_psu, true), [970, row_c, -28], [972, 100, -28], [975, T + 4, Tz], [1142, T + 4, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);
-coil_vis_at();
-module coil_vis_at() translate(P(K)) coil_vis(80, "#f07a2a");
+// Laptop DC (measured 177 cm): out along the slack run, one loop in the pocket, back, up to the laptop.
+lap_dc   = 1770;
+lap_port = [800, 230, 70];  // ASSUMED: DC socket at the back of the laptop, on the stand
+lap_out  = [end(lap_psu, true), [972, row_c, -28], [975, S - 5, Tz], [1335, S - 5, Tz], [1350, K.y + 10, K.z]];
+lap_back = [[1350, K.y - 10, K.z], [1345, S + 5, Tz], [805, S + 5, Tz], [797, row_c + 10, -28], [797, W, -10], [795, W, 16], [800, 30, 35], lap_port];
+lap_r    = (lap_dc - plen(lap_out) - plen(lap_back)) / (2 * PI);   // what is left goes into one loop around K
+assert(lap_r * 2 >= 50 && lap_r * 2 <= 90, str("laptop DC loop ", round(lap_r * 2), " mm does not fit the pocket (50..90): move the pocket or the brick"));
+echo(str("laptop DC: hank loop diameter ", round(lap_r * 2), " mm"));
+cable("laptop DC", concat(lap_out, [for (a = [180:-30:-180]) K + lap_r * [cos(a), sin(a), 0]], lap_back), "#f07a2a", 5);
+cable("laptop AC",  [end(lap_psu, false), [800, row_c, -28], [800, 100, -28], [803, T + 4, Tz], [1142, T + 4, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);
