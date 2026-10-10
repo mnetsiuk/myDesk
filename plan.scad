@@ -7,8 +7,8 @@ grid   = 28;    // openGrid
 tile_t = 4;     // openGrid Lite (Full = 6.8)
 ch_h   = 22;    // Underware monokini channel, min total height
 
-clamp_x   = 800;   // ASSUMED: monitor arm clamp centre
-clamp_sz  = [70, 80, 40];               // ASSUMED: lower jaw footprint
+clamp_x   = 700;   // monitor arm clamp centre (700 from left edge; edge or centre? verify on photo)
+clamp_sz  = [45, 55, 40];               // lower jaw 45 wide x 55 deep; height ASSUMED
 mon_psu   = [114.5, 51.6, 30];
 lap_psu   = [154, 73.5, 30];
 strip     = [300, 55, 40];              // ASSUMED: 5-way Schuko strip
