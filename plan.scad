@@ -97,7 +97,7 @@ cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], [mon_psu[0].x
 // Laptop DC (measured 177 cm): out of the brick, N turns round the spool, up over the edge to the laptop.
 lap_dc   = 1770;
 laptop   = [780, 130, 360];   // ASSUMED: laptop on its stand: centre x, back edge y, width
-lap_side = "right";           // DC socket on the side (user); which side: ASSUMED
+lap_side = "right";           // DC socket on the right side, L-plug (user)
 lap_port = [laptop[0] + (lap_side == "right" ? 1 : -1) * laptop[2] / 2, laptop[1] + 50, 80];  // L-plug, cord runs back along the side
 cab_d    = 5.5;
 sp_rp    = (spool[1] * grid - 28) / 2;                                   // post end radius: half its width
