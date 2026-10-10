@@ -6,7 +6,7 @@
 part = "pair";             // pair | left | right
 
 r        = [230, 190, 50]; // router W x D x H lying flat, W includes the stand
-stand    = [10, 75.5];     // fixed stand at the LEFT end: thickness along W (ASSUMED), height lying flat; full depth ASSUMED
+stand    = [10, 75.5];     // fixed full-depth stand at the LEFT end: thickness along W (only drawn), height lying flat
 rail_y   = 170;            // back rail front-to-back: 170..200 from the back edge
 rail_h   = 30;
 gap      = 4;              // router top below the rail
