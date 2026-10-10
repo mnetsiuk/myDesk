@@ -2,7 +2,7 @@
 // Positions: [x from LEFT desk edge, y from BACK edge, z from tabletop UNDERSIDE (up +)], mm.
 // Everything lives in the back zone (y 0..170, between the back edge and the back rail) on screwed openGrid Full boards:
 //   edge rows (y 1..85):  power bricks + strip in Underware Item Holders (build.sh), cables go up over the back edge
-//   rail rows (y 85..169): Underware hooks for slack, Underware channel trunk to the strip
+//   rail rows (y 85..169): Underware channel trunk to the strip; shir cord spool for the laptop DC slack
 // Run ./build.sh first (holders are imported from build/). ASSUMED values are marked.
 include <BOSL2/std.scad>       // parts.scad draws with BOSL2; its $-variables must exist at top level
 include <desk.scad>
@@ -24,11 +24,10 @@ clamp    = [[677.5, 0], [45, 55, 40]];          // monitor arm clamp at 700, low
 rtr_psu  = [80, 54, 33.3];                      // plug-in adapter: sits straight in strip socket 5
 spk_psu  = [[g0.x + 10 * grid, 8], [110, 50, 30], "speaker", "y"];        // ASSUMED: speaker brick, will be replaced
 mon_psu  = [[g0.x + 20 * grid, 8], [114.5, 51.6, 30], "monitor", "y"];    // first slot centre right of the clamp
-lap_psu  = [[809, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; AC in left, DC out right
-strip    = [[980, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
-coilbox  = [[1340, g0.y + 2.5 * grid], [95, 95, 22], "coil", "x", [1]];  // one cup, open towards the slack run: pocket for the hank
-trunk    = [9, 31];                             // AC trunk: from cell 9, 31 cells, last row before the rail
-slack    = [22, 18];                            // slack run: laptop DC out and back, row 4
+spool    = [22, 3, 30];                        // shir spool halves 3x2 at cell x 22, rows 0-1 and 3-4; post height
+lap_psu  = [[913, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; DC out left into the spool, AC right
+strip    = [[1075, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
+trunk    = [9, 34];                             // AC trunk: from cell 9, 34 cells, last row before the rail
 boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [26, 6]]];  // [cell, size]; none under the clamp
 wall_y   = -20;                                 // ASSUMED: wall 20 mm behind the desk
 
@@ -75,20 +74,19 @@ held(lap_psu) brick_vis(lap_psu[1]);
 held(strip) strip_vis(strip[1]);
 for (i = [0:2]) plug(i);
 translate(P([sock(5), strip[0].y, -hold - strip[1].z])) wart_vis(rtr_psu);   // router adapter, body along y so socket 4 stays free
-held(coilbox);
 translate([-800, 400, top_z]) clamp_vis_at();
 module clamp_vis_at() translate([clamp[0].x, -clamp[0].y - clamp[1].y, -clamp[1].z]) clamp_vis(clamp[1]);
 run(trunk, 5);
-run(slack, 4);
+for (j = [0, 1]) translate(P([C(spool[0], j ? 3 : 2).x + (j ? spool[1] * grid : 0), C(0, j ? 3 : 2).y, -hold]))
+    multmatrix(j ? [[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0]] : [[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0]])
+        color(printed()) import("build/spool_3x2.stl");          // flat sides face each other across row 2
 
 // --- cables (echo prints each route length) ---
 W  = wall_y + 8;            // between desk and wall
 T  = C(0, 5).y + 14;        // trunk centre line
-S  = C(0, 4).y + 14;        // slack run centre line
 Tz = -board - 9;            // inside a channel
 Rz = -board;                // router drawn one board lower
-K  = [coilbox[0].x + 50, coilbox[0].y, -hold - 11];                       // hank centre
-cable("strip cord -> wall", [end(strip, false), [970, row_c, -hold - 30], [968, 140, Tz], [960, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
+cable("strip cord -> wall", [end(strip, false), [1065, row_c, -hold - 30], [1063, 140, Tz], [1055, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
 cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95 + Rz], [300, 30, -72 + Rz], [300, 50, -72 + Rz]], "#f4f4f4", 7);
 cable("LAN router -> closet", [[350, 50, -72 + Rz], [350, 30, -72 + Rz], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
 cable("router DC",  [[sock(5), row_c + 40, -hold - strip[1].z - 25], [sock(5) - 5, 120, -60], [sock(5) - 10, T + 4, Tz], [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]], "#555", 4);
@@ -96,13 +94,25 @@ cable("speaker DC", [end(spk_psu, false), [spk_psu[0].x, W, -10], [spk_psu[0].x,
 cable("speaker AC", [end(spk_psu, true), [spk_psu[0].x, 128, -28], [spk_psu[0].x + 3, T - 4, Tz], [1050, T - 4, Tz], [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#8e44ad", 5);
 cable("monitor DC", [end(mon_psu, false), [mon_psu[0].x, W, -10], [740, W, 20], [712, W, 250]], "#d03a3a", 4);
 cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], [mon_psu[0].x + 3, T, Tz], [1096, T, Tz], [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#d03a3a", 5);
-// Laptop DC (measured 177 cm): out along the slack run, one loop in the pocket, back, up to the laptop.
+// Laptop DC (measured 177 cm): out of the brick, N turns round the spool, up over the edge to the laptop.
 lap_dc   = 1770;
 lap_port = [800, 230, 70];  // ASSUMED: DC socket at the back of the laptop, on the stand
-lap_out  = [end(lap_psu, true), [972, row_c, -28], [975, S - 5, Tz], [1335, S - 5, Tz], [1350, K.y + 10, K.z]];
-lap_back = [[1350, K.y - 10, K.z], [1345, S + 5, Tz], [805, S + 5, Tz], [797, row_c + 10, -28], [797, W, -10], [795, W, 16], [800, 30, 35], lap_port];
-lap_r    = (lap_dc - plen(lap_out) - plen(lap_back)) / (2 * PI);   // what is left goes into one loop around K
-assert(lap_r * 2 >= 50 && lap_r * 2 <= 90, str("laptop DC loop ", round(lap_r * 2), " mm does not fit the pocket (50..90): move the pocket or the brick"));
-echo(str("laptop DC: hank loop diameter ", round(lap_r * 2), " mm"));
-cable("laptop DC", concat(lap_out, [for (a = [180:-30:-180]) K + lap_r * [cos(a), sin(a), 0]], lap_back), "#f07a2a", 5);
-cable("laptop AC",  [end(lap_psu, false), [800, row_c, -28], [800, 100, -28], [803, T + 4, Tz], [1142, T + 4, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);
+cab_d    = 5.5;
+sp_c     = [C(spool[0], 0).x + spool[1] * grid / 2, [C(0, 2).y - 14, C(0, 3).y + 14]];   // oval: x, end-arc centre ys (D: 14 flat + r 28)
+sp_r     = (spool[1] * grid - 28) / 2 + cab_d / 2;                       // post half-width + cable radius
+sp_turn  = 2 * (sp_c[1][1] - sp_c[1][0]) + 2 * PI * sp_r;
+function oval(s, z) = let(L = sp_c[1][1] - sp_c[1][0], q = s % sp_turn, x = sp_c[0], y0 = sp_c[1][0], y1 = sp_c[1][1])
+    q < L ? [x + sp_r, y0 + q, z] :
+    q < L + PI * sp_r ? let(a = (q - L) / sp_r * 180 / PI) [x + sp_r * cos(a), y1 + sp_r * sin(a), z] :
+    q < 2 * L + PI * sp_r ? [x - sp_r, y1 - (q - L - PI * sp_r), z] :
+    let(a = 180 + (q - 2 * L - PI * sp_r) / sp_r * 180 / PI) [x + sp_r * cos(a), y0 + sp_r * sin(a), z];
+lap_in   = [end(lap_psu, false), [sp_c[0] + sp_r + 6, row_c, -hold - 15], oval(row_c - sp_c[1][0], -hold - 4)];
+function lap_up(p) = [p, [sp_c[0] - sp_r - 5, 6, -20], [sp_c[0] - sp_r - 5, W, -10], [sp_c[0] - sp_r - 8, W, 16], [800, 30, 35], lap_port];
+s0       = row_c - sp_c[1][0];                                            // where the cable lands on the oval
+function wrap(n) = oval(s0 + n * sp_turn, -hold - 4 - n * cab_d);        // point after n turns
+function turns(n) = (lap_dc - plen(lap_in) - plen(lap_up(wrap(n)))) / sp_turn;
+lap_n    = turns(turns(turns(0)));                                        // exit point depends on n: iterate
+assert(lap_n >= 1 && lap_n * cab_d <= spool[2], str("laptop DC: ", lap_n, " turns do not fit a ", spool[2], " mm post"));
+echo(str("laptop DC: ", round(lap_n * 10) / 10, " turns on the spool"));
+cable("laptop DC", concat(lap_in, [for (k = [0:ceil(lap_n * sp_turn / 8)]) wrap(min(k * 8 / sp_turn, lap_n))], lap_up(wrap(lap_n))), "#f07a2a", cab_d);
+cable("laptop AC",  [end(lap_psu, true), [1072, row_c, -28], [1072, 100, -28], [1070, T + 4, Tz], [1230, T + 4, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#f07a2a", 6);

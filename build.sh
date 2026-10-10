@@ -15,6 +15,8 @@ holder laptop     74.5 31   25 12   # 154 x 73.5 x 30
 holder monitor    52.6 31   25 12   # 114.5 x 51.6 x 30
 holder speaker    51   31   25 12   # ASSUMED 110 x 50 x 30, brick will be replaced
 holder strip      71   61   25 12   # Brennenstuhl Eco-Line 350 x 70 x 60, cord end; measure when bought
-holder coil       95   22   95 12   # pocket for the laptop DC hank (loops ~80 mm)
+
+# shir's cord spool (lib/spool-shir), one half; two halves face each other across the zone
+openscad -q -o build/spool_3x2.stl -D Slots_X=3 -D Slots_Y=2 -D Spool_Height=30 lib/spool-shir/underware-cord-spool.scad
 
 for p in left right; do openscad -q -o build/cheek_$p.stl -D "part=\"$p\"" router_mount.scad; done
