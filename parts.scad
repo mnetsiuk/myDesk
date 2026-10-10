@@ -1,7 +1,7 @@
 // Visual stand-ins for plan.scad renders (not for printing). Each part is drawn in its own box
 // [0..s.x] x [0..s.y] x [0..s.z]; plan.scad places that box under the tabletop.
 include <BOSL2/std.scad>
-use <lib/quackworks/openGrid.scad>
+use <lib/QuackWorks/openGrid/openGrid.scad>
 use <lib/openGrid-openSCAD/beta/monokini/monokini_I_channel.scad>
 
 PRINTED = "#7385e6";   // everything we print

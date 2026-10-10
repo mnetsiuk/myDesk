@@ -1,3 +1,6 @@
 [submodule "lib/openGrid-openSCAD"]
 	path = lib/openGrid-openSCAD
 	url = https://github.com/openGrid-3D/openGrid-openSCAD
+[submodule "lib/QuackWorks"]
+	path = lib/QuackWorks
+	url = https://github.com/AndyLevesque/QuackWorks
