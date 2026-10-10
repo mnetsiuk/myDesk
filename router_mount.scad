@@ -5,7 +5,8 @@
 
 part = "pair";             // pair | left | right
 
-r        = [230, 190, 50]; // router W x D x H, lying flat, stand removed
+r        = [230, 190, 50]; // router W x D x H lying flat, W includes the stand
+stand    = [10, 75.5];     // fixed stand at the LEFT end: thickness along W (ASSUMED), height lying flat; full depth ASSUMED
 rail_y   = 170;            // back rail front-to-back: 170..200 from the back edge
 rail_h   = 30;
 gap      = 4;              // router top below the rail
@@ -17,14 +18,17 @@ flange_w = 18;
 screws_y = [15, 85, 155];  // 3.5 mm wood screws, <= 12 mm long into the tabletop
 
 yb = port_gap;  yf = port_gap + r.y;
-zt = -rail_h - gap;  zb = zt - r.z - clr;
+zt = -rail_h - gap;                         // stand top: the highest point of the router
+zbt = zt - (stand.y - r.z) / 2;             // body top
+zl = zt - stand.y - clr;                    // left ledge, under the stand
+zr = zbt - r.z - clr;                       // right ledge, under the body
 
 assert(zt < -rail_h, "router must clear the rail");
 assert(screws_y[len(screws_y) - 1] + 4 < rail_y, "flange screws must stay behind the rail");
-assert(yf + t <= 256, "cheek longer than a 256 mm bed");
+assert(yf + t <= 360, "cheek longer than the Prusa XL bed");
 
 // Left cheek; the router sits on the +x side starting at x = clr.
-module cheek() {
+module cheek(zb) {
     profile = [[0, 0], [rail_y - 4, 0], [rail_y - 4, -rail_h - 2], [yf + t, -rail_h - 2], [yf + t, zb - t], [0, zb - t]];
     translate([-t, 0, 0]) rotate([90, 0, 90]) linear_extrude(t) polygon(profile);   // plate in YZ
     translate([0, yb - 3, zb - t]) cube([ledge, yf + t - yb + 3, t]);                // ledge
@@ -39,11 +43,15 @@ module cheek() {
     }
 }
 
-module pair() { cheek(); translate([r.x + 2 * clr, 0, 0]) mirror([1, 0, 0]) cheek(); }
-module router_ghost() color("WhiteSmoke", 0.6) translate([clr, yb, zt - r.z]) cube(r);
+module pair() { cheek(zl); translate([r.x + 2 * clr, 0, 0]) mirror([1, 0, 0]) cheek(zr); }
+module router_ghost() color("WhiteSmoke", 0.6) {
+    translate([clr, yb, zt - stand.y]) cube([stand.x, r.y, stand.y]);
+    translate([clr + stand.x, yb, zbt - r.z]) cube([r.x - stand.x, r.y, r.z]);
+}
 
-module flat() translate([0, 0, t]) rotate([0, -90, 0]) cheek();   // plate on the bed
+module flat(zb) translate([0, 0, t]) rotate([0, -90, 0]) cheek(zb);   // plate on the bed
 
 if (part == "pair") { color("SlateBlue") pair(); router_ghost(); }
-if (part == "left") flat();
-if (part == "right") mirror([0, 1, 0]) flat();
+if (part == "left") flat(zl);
+if (part == "right") mirror([0, 1, 0]) flat(zr);
+echo(router_bottom = zl, rail_clearance = -rail_h - zt);
