@@ -76,8 +76,8 @@ for (b = boards) translate(P([C(b[0].x, b[0].y).x, C(b[0].x, b[0].y).y + b[1].y 
 module clamp_vis_at() translate([clamp[0].x, -clamp[0].y - clamp[1].y, -clamp[1].z]) clamp_vis(clamp[1]);
 translate([-800, 400, top_z]) clamp_vis_at();
 if (show_items) {
-// TODO: router cheeks still have screw flanges; to move onto Multiconnect, drawn one board lower for now.
-translate([-800 + 219, 400, top_z - board]) mirror([0, 1, 0]) { color(printed()) pair(); router_ghost(); }
+// Router in its cheeks on Multiconnect (router_mount.scad): board A cells 0-8, outer faces on its edges (x 210 and 462).
+translate([-800 + 210 + 5, 400, top_z]) mirror([0, 1, 0]) { color(printed()) pair(); router_ghost(); }
 held(spk_psu) brick_vis(spk_psu[1]);
 held(mon_psu) brick_vis(mon_psu[1]);
 held(lap_psu) brick_vis(lap_psu[1]);
@@ -94,13 +94,12 @@ for (j = [0, 1]) translate(P([C(spool[0], j ? 3 : 2).x + (j ? spool[1] * grid : 
 W  = wall_y + 8;            // between desk and wall
 T  = C(0, 5).y + 14;        // trunk centre line
 Tz = -board - 9;            // inside a channel
-Rz = -board;                // router drawn one board lower
 // Cord through the trunk's front wall at cell boundary i: Open channels have slots at inner boundaries only.
 function slot(i) = assert(i > trunk[0] && i < trunk[0] + trunk[1] && (i - trunk[0]) % 8 != 0, str("no slot at boundary ", i))
     [C(i, 5).x, C(0, 5).y, Tz];
 cable("strip cord -> wall", [end(strip, false) + [-8, 0, 20], [strip[0].x - 25, strip[0].y + 20, -hold - 14], slot(29), [C(29, 0).x - 12, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
-cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95 + Rz], [300, 30, -72 + Rz], [300, 50, -72 + Rz]], "#f4f4f4", 7);
-cable("LAN router -> closet", [[350, 50, -72 + Rz], [350, 30, -72 + Rz], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
+cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95], [300, 30, -72], [300, 50, -72]], "#f4f4f4", 7);
+cable("LAN router -> closet", [[350, 50, -72], [350, 30, -72], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
 // Router DC (measured 151 cm): straight into the trunk slot in front of the adapter, the slack Z-folded right there
 // (3 passes, s = fold length), out of the trunk's left end to the router.
 rtr_dc   = 1510;
@@ -108,7 +107,7 @@ function rtr_route(s) = let(xb = C(rtr_slot, 0).x - 6) [
     let(d = (rtr_psu.x - rtr_psu[3] + 6) / sqrt(2)) [sock(rtr_sock) - d, strip[0].y + d, -hold - strip[1].z - rtr_psu[4]],
     [C(rtr_slot, 0).x - 6, 128, -45], slot(rtr_slot),
     [xb, T - 6, Tz], [xb - s, T - 6, Tz], [xb - s, T, Tz], [xb, T, Tz], [xb, T + 4, Tz],
-    [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]];
+    [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60], [400, 32, -72], [400, 50, -72]];
 rtr_fold = (rtr_dc - plen(rtr_route(0))) / 2;     // each fold pass is horizontal: length grows by exactly 2 s
 assert(rtr_fold >= 0 && C(rtr_slot, 0).x - 6 - rtr_fold > C(29, 0).x + 8,    // fold stays right of the strip cord entry (29): <= 4 cords + fold, ~42 %
        str("router DC: a ", round(rtr_fold), " mm fold does not fit between slots 29 and ", rtr_slot));
