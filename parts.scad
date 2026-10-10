@@ -30,6 +30,13 @@ module plug_vis() color(DARK) {
     hull() { translate([0, 0, -30]) cylinder(d = 30, h = 14, $fn = 32); translate([0, 22, -26]) xrot(-90) cylinder(d = 12, h = 4, $fn = 16); }
 }
 
+// Plug-in adapter in a downward socket: s = body [x, y, z]; origin = socket face centre.
+module wart_vis(s) color(DARK) {
+    translate([0, 0, -6]) cylinder(d = 36, h = 8, $fn = 32);
+    translate([0, 0, -6 - s.z / 2]) cuboid([s.y, s.x, s.z], rounding = 3);
+    translate([0, s.x / 2 - 8, -6 - s.z / 2]) xrot(-90) cylinder(d = 4, h = 16, $fn = 12);      // DC cord out
+}
+
 module clamp_vis(s) color("#141414") {
     translate([0, 0, s.z - 12]) cuboid([s.x, s.y, 12], rounding = 3, anchor = BOT + LEFT + FRONT);
     translate([s.x / 2, s.y / 2, 0]) { cylinder(d = 10, h = s.z, $fn = 20); cylinder(d = 36, h = 8, $fn = 6); }

@@ -8,8 +8,8 @@ module label(s, p, sz = 11, c = "Black") color(c) translate([-800 + p.x, 400 - p
     text(s, size = sz, font = "DejaVu Sans:style=Bold", halign = "center", valign = "center");
 
 label("роутер", [335, 145], 16);  label("лежить під балкою", [335, 120], 10);
-label("БЖ роутера", [506, 57], 7, "White");
-label("БЖ колонки", [611, 57], 8, "White");
+label("БЖ колонки", [525, 57], 8, "White");
+label("адаптер роутера", [1370, 122], 8);
 label("БЖ монітора", [802, 57], 8, "White");
 label("БЖ ноутбука", [953, 57], 9, "White");
 label("подовжувач", [1340, 40], 9, "White");
