@@ -30,7 +30,10 @@ assert(yf + t <= 360, "cheek longer than the Prusa XL bed");
 // Left cheek; the router sits on the +x side starting at x = clr.
 module cheek(zb) {
     profile = [[0, 0], [rail_y - 4, 0], [rail_y - 4, -rail_h - 2], [yf + t, -rail_h - 2], [yf + t, zb - t], [0, zb - t]];
-    translate([-t, 0, 0]) rotate([90, 0, 90]) linear_extrude(t) polygon(profile);   // plate in YZ
+    translate([-t, 0, 0]) rotate([90, 0, 90]) linear_extrude(t) difference() {      // plate in YZ
+        polygon(profile);
+        translate([10, zb + 4]) square([yb - 18, -zb - 18]);                       // window: cables pass behind the router
+    }
     translate([0, yb - 3, zb - t]) cube([ledge, yf + t - yb + 3, t]);                // ledge
     translate([0, yb - 3, zb]) cube([ledge, 3, 4]);                                  // back stop
     translate([0, yf + 1, zb]) cube([ledge, t - 1, 2]);                              // front bump, lift 2 mm to slide out
