@@ -27,12 +27,16 @@ assert(zt < -rail_h, "router must clear the rail");
 assert(screws_y[len(screws_y) - 1] + 4 < rail_y, "flange screws must stay behind the rail");
 assert(yf + t <= 360, "cheek longer than the Prusa XL bed");
 
+module window(a, b, r = 5) translate(a) offset(r = r) offset(delta = -r) square(b - a);
+
 // Left cheek; the router sits on the +x side starting at x = clr.
 module cheek(zb) {
     profile = [[0, 0], [rail_y - 4, 0], [rail_y - 4, -rail_h - 2], [yf + t, -rail_h - 2], [yf + t, zb - t], [0, zb - t]];
-    translate([-t, 0, 0]) rotate([90, 0, 90]) linear_extrude(t) difference() {      // plate in YZ
-        polygon(profile);
-        translate([10, zb + 4]) square([yb - 18, -zb - 18]);                       // window: cables pass behind the router
+    translate([-t, 0, 0]) rotate([90, 0, 90]) linear_extrude(t) difference() {      // plate in YZ, rounded corners
+        offset(r = 3) offset(delta = -3) offset(r = -3) offset(delta = 3) polygon(profile);
+        window([10, zb + 4], [yb - 8, -14]);                                       // cables pass behind the router
+        window([yb + 12, zb + 8], [rail_y - 16, -16]);                             // lightening
+        window([rail_y + 8, zb + 8], [yf - 12, -rail_h - 10]);
     }
     translate([0, yb - 3, zb - t]) cube([ledge, yf + t - yb + 3, t]);                // ledge
     translate([0, yb - 3, zb]) cube([ledge, 3, 4]);                                  // back stop
@@ -47,14 +51,18 @@ module cheek(zb) {
 }
 
 module pair() { cheek(zl); translate([r.x + 2 * clr, 0, 0]) mirror([1, 0, 0]) cheek(zr); }
-module router_ghost() color("WhiteSmoke", 0.6) {
-    translate([clr, yb, zt - stand.y]) cube([stand.x, r.y, stand.y]);
-    translate([clr + stand.x, yb, zbt - r.z]) cube([r.x - stand.x, r.y, r.z]);
+module rbox(p, s, rr = 5) translate(p) hull() for (x = [rr, s.x - rr], y = [rr, s.y - rr], z = [rr, s.z - rr]) translate([x, y, z]) sphere(rr, $fn = 16);
+module router_ghost() {                                                  // PYUR router, visual only
+    x0 = clr + stand.x;
+    color("#f5f5f3") rbox([x0, yb, zbt - r.z], [r.x - stand.x, r.y, r.z]);
+    color("#cfd0d0") for (z = [zbt - r.z - 0.3, zbt - 0.7]) translate([x0 + 20, yb + 15, z]) cube([r.x - stand.x - 40, r.y - 30, 1]);  // grilles
+    color("#e6e6e4") hull() { translate([clr, yb, zt - stand.y]) cube([2, r.y, stand.y]); translate([x0, yb, zbt - r.z]) cube([0.1, r.y, r.z]); }
+    color("#5ad15a") for (i = [0:3]) translate([x0 + 60 + i * 40, yf - 0.5, zbt - r.z / 2]) rotate([-90, 0, 0]) cylinder(d = 3, h = 1, $fn = 12);
 }
 
 module flat(zb) translate([0, 0, t]) rotate([0, -90, 0]) cheek(zb);   // plate on the bed
 
-if (part == "pair") { color("SlateBlue") pair(); router_ghost(); }
+if (part == "pair") { color("#7385e6") pair(); router_ghost(); }
 if (part == "left") flat(zl);
 if (part == "right") mirror([0, 1, 0]) flat(zr);
 echo(router_bottom = zl, rail_clearance = -rail_h - zt);

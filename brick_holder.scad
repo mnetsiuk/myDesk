@@ -13,11 +13,12 @@ clr = 1;
 module strap(b) {
     iw = b.y + 2 * clr;  ih = b.z + clr;
     difference() {
-        union() {
-            translate([-t, 0, -ih - t]) cube([iw + 2 * t, w, t]);                         // bottom
-            for (x = [-t, iw]) translate([x, 0, -ih - t]) cube([t, w, ih + t]);           // walls
-            for (x = [-t - tab, iw + t]) translate([x, 0, -t]) cube([tab, w, t]);         // tabs
-        }
+        rotate([90, 0, 0]) mirror([0, 0, 1]) linear_extrude(w)                            // U + tabs, rounded profile in XZ
+            offset(r = 1) offset(delta = -1) offset(r = -2) offset(delta = 2) union() {
+                translate([-t, -ih - t]) square([iw + 2 * t, t]);                          // bottom
+                for (x = [-t, iw]) translate([x, -ih - t]) square([t, ih + t]);            // walls
+                for (x = [-t - tab, iw + t]) translate([x, -t]) square([tab, t]);          // tabs
+            }
         for (x = [-t - tab / 2, iw + t + tab / 2]) translate([x, w / 2, -t - 0.01]) {
             cylinder(d = 3.8, h = t + 1, $fn = 24);
             cylinder(d1 = 7.5, d2 = 3.8, h = 2, $fn = 24);

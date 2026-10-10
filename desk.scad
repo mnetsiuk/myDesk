@@ -7,8 +7,8 @@ frame_h  = 30;    // steel frame hangs 734..764
 // Frame rails (Y ranges, all span X -730..730): outer 200..230, inner 35..65, mirrored.
 // Free bays under the top between rails: Y 65..200 (135 mm) and Y -35..35 (70 mm), mirrored.
 
-module desk(show_top = true) {
-    if (show_top) color("BurlyWood", 0.5) import("desk/top.stl");
-    color("DimGray")  import("desk/frame.stl");
-    color("Silver")   import("desk/legs.stl");
+module desk(show_top = true) {   // white Bekant
+    if (show_top) color("#f4f4f2") import("desk/top.stl");
+    color("#e4e4e1") import("desk/frame.stl");
+    color("#ebebe8") import("desk/legs.stl");
 }
