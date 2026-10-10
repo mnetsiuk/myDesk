@@ -11,6 +11,7 @@ use <parts.scad>
 
 show_floor = true;               // off for views from below
 show_walls = true;               // off for cut-away views from behind
+show_items = true;               // off: boards only (sketches/boards.scad)
 grid  = 28;                      // openGrid
 g0    = [210, 1];                // grid origin: cell (0, 0) corner
 board = 6.8;                     // openGrid Full
@@ -22,13 +23,13 @@ clamp    = [[677.5, 0], [45, 55, 40]];          // monitor arm clamp at 700, low
 //   dir "x": along the edge, [x, y] = left end, y on the item centre line
 //   dir "y": across the zone, [x, y] = edge-side end, x on the centre line; AC in from the trunk, DC out at the edge
 rtr_psu  = [80, 54, 33.3];                      // plug-in adapter: sits straight in strip socket 5
-spk_psu  = [[g0.x + 10 * grid, 8], [110, 50, 30], "speaker", "y"];        // ASSUMED: speaker brick, will be replaced
+spk_psu  = [[g0.x + 10.5 * grid, 8], [110, 50, 30], "speaker", "y"];      // ASSUMED: speaker brick, will be replaced; 1-slot holder -> cell centre
 mon_psu  = [[g0.x + 20 * grid, 8], [114.5, 51.6, 30], "monitor", "y"];    // first slot centre right of the clamp
 spool    = [22, 2, 35];                        // shir spool halves 2x2 (his default for power cords) at cell x 22, rows 0-1 and 3-4; post height
 lap_psu  = [[885, row_c], [154, 73.5, 30], "laptop", "x"];                // too long to stand across; DC out left into the spool, AC right
 strip    = [[1047, row_c], [350, 70, 60], "strip", "x"];                   // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
 trunk    = [9, 34];                             // AC trunk: from cell 9, 34 cells, last row before the rail
-boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [26, 6]]];  // [cell, size]; none under the clamp
+boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [12, 6]], [[31, 0], [12, 6]]];  // A B C D1 D2 = build.sh; none under the clamp
 wall_y   = -20;                                 // ASSUMED: wall 20 mm behind the desk
 
 function P(p) = [-800 + p.x, 400 - p.y, top_z + p.z];
@@ -46,7 +47,7 @@ module held(b) translate(P([b[0].x, b[0].y, 0])) rotate([0, 0, b[3] == "y" ? -90
             color(printed()) import(str("build/holder_", b[2], ".stl"));
 }
 module run(r, row) for (k = [0:ceil(r[1] / 8) - 1]) translate(P([C(r[0] + k * 8, row).x, C(0, row).y + grid / 2, -3.4])) uw_channel(min(8, r[1] - k * 8));
-module cable(name, pts, c, d = 6) { echo(str(name, ": ", round(plen(pts) / 10), " cm")); cable_vis([for (p = pts) P(p)], c, d); }
+module cable(name, pts, c, d = 6) if (show_items) { echo(str(name, ": ", round(plen(pts) / 10), " cm")); cable_vis([for (p = pts) P(p)], c, d); }
 module plug(i) translate(P([sock(i), strip[0].y, -hold - strip[1].z])) rotate([0, 0, 180]) plug_vis();   // cord towards the trunk
 
 // --- room ---
@@ -66,6 +67,9 @@ translate([-800 + 250, 400 - wall_y - 8, 200]) {                                
 for (b = boards) translate(P([C(b[0].x, b[0].y).x, C(b[0].x, b[0].y).y + b[1].y * grid, 0])) tiles_vis(b[1].x, b[1].y);
 
 // --- hardware ---
+module clamp_vis_at() translate([clamp[0].x, -clamp[0].y - clamp[1].y, -clamp[1].z]) clamp_vis(clamp[1]);
+translate([-800, 400, top_z]) clamp_vis_at();
+if (show_items) {
 // TODO: router cheeks still have screw flanges; to move onto Multiconnect, drawn one board lower for now.
 translate([-800 + 219, 400, top_z - board]) mirror([0, 1, 0]) { color(printed()) pair(); router_ghost(); }
 held(spk_psu) brick_vis(spk_psu[1]);
@@ -74,12 +78,11 @@ held(lap_psu) brick_vis(lap_psu[1]);
 held(strip) strip_vis(strip[1]);
 for (i = [0:2]) plug(i);
 translate(P([sock(5), strip[0].y, -hold - strip[1].z])) wart_vis(rtr_psu);   // router adapter, body along y so socket 4 stays free
-translate([-800, 400, top_z]) clamp_vis_at();
-module clamp_vis_at() translate([clamp[0].x, -clamp[0].y - clamp[1].y, -clamp[1].z]) clamp_vis(clamp[1]);
 run(trunk, 5);
 for (j = [0, 1]) translate(P([C(spool[0], j ? 3 : 2).x + (j ? spool[1] * grid : 0), C(0, j ? 3 : 2).y, -hold]))
     multmatrix(j ? [[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0]] : [[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0]])
         color(printed()) import("build/spool_2x2.stl");          // flat sides face each other across row 2
+}
 
 // --- cables (echo prints each route length) ---
 W  = wall_y + 8;            // between desk and wall
