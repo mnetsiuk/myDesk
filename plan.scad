@@ -12,6 +12,7 @@ clamp_x  = 700;                  // monitor arm clamp centre
 clamp_sz = [45, 55, 40];         // lower jaw; height ASSUMED
 router   = [230, 190, 50];       // PYUR router lying flat (measured 230 x 190 x 50); ports on the 230 side, facing the wall
 rtr_psu  = [80, 54, 33.3];
+router_opt = "A";                // "A" flat under the rail | "B" on its narrow edge
 mon_psu  = [114.5, 51.6, 30];
 lap_psu  = [154, 73.5, 30];
 spk_psu  = [110, 50, 30];        // ASSUMED: speaker brick, will be replaced
@@ -26,8 +27,10 @@ color("White", 0.3) translate([-820, -400, 0]) cube([20, 820, 1000]);    // left
 color("Ivory") translate([-800, 385, 720]) rotate([0, 90, 0]) cylinder(d = 20, h = 180);  // ASSUMED: heating pipe at back-left corner
 color("LightGray") translate([-800 + 250, 400, 200]) cube([150, 15, 250]);  // ASSUMED: wall sockets + TAE + coax, x 250..400
 
-// 190 deep > 170 back zone: the router crosses the back rail, so it hangs BELOW the rail (34..84 mm under the top).
-color("WhiteSmoke") translate([-800 + 220, 400 - 5 - router.y, top_z - frame_h - 4 - router.z]) cube(router);
+// 190 deep > 170 back zone. A: flat, hangs BELOW the back rail (34..84 mm under the top).
+// B: on its long narrow edge inside the back zone (hangs 190 mm), ports down.
+if (router_opt == "A") color("WhiteSmoke") translate([-800 + 220, 400 - 5 - router.y, top_z - frame_h - 4 - router.z]) cube(router);
+else under([220, 5], [router.x, router.z, router.y], "WhiteSmoke");
 under([460, 5], rtr_psu, "Gray");
 under([clamp_x - clamp_sz.x/2, 0], clamp_sz, "Black");
 under([clamp_x + clamp_sz.x/2 + 5, 5], mon_psu, "Red");                  // short DC cable: right next to the clamp
