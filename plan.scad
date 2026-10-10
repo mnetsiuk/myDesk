@@ -96,7 +96,9 @@ cable("monitor DC", [end(mon_psu, false), [mon_psu[0].x, W, -10], [740, W, 20], 
 cable("monitor AC", [end(mon_psu, true), [mon_psu[0].x, 132, -28], [mon_psu[0].x + 3, T, Tz], [1096, T, Tz], [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#d03a3a", 5);
 // Laptop DC (measured 177 cm): out of the brick, N turns round the spool, up over the edge to the laptop.
 lap_dc   = 1770;
-lap_port = [800, 230, 70];  // ASSUMED: DC socket at the back of the laptop, on the stand
+laptop   = [780, 130, 360];   // ASSUMED: laptop on its stand: centre x, back edge y, width
+lap_side = "right";           // DC socket on the side (user); which side: ASSUMED
+lap_port = [laptop[0] + (lap_side == "right" ? 1 : -1) * laptop[2] / 2, laptop[1] + 50, 80];  // L-plug, cord runs back along the side
 cab_d    = 5.5;
 sp_rp    = (spool[1] * grid - 28) / 2;                                   // post end radius: half its width
 sp_c     = [C(spool[0], 0).x + spool[1] * grid / 2, [C(0, 2).y - (42 - sp_rp), C(0, 3).y + (42 - sp_rp)]];   // oval: x, end-arc centre ys (D post 42 deep)
@@ -108,7 +110,7 @@ function oval(s, z) = let(L = sp_c[1][1] - sp_c[1][0], q = s % sp_turn, x = sp_c
     q < 2 * L + PI * sp_r ? [x - sp_r, y1 - (q - L - PI * sp_r), z] :
     let(a = 180 + (q - 2 * L - PI * sp_r) / sp_r * 180 / PI) [x + sp_r * cos(a), y0 + sp_r * sin(a), z];
 lap_in   = [end(lap_psu, false), [sp_c[0] + sp_r + 6, row_c, -hold - 15], oval(row_c - sp_c[1][0], -hold - 4)];
-function lap_up(p) = [p, [sp_c[0] - sp_r - 5, 6, -20], [sp_c[0] - sp_r - 5, W, -10], [sp_c[0] - sp_r - 8, W, 16], [800, 30, 35], lap_port];
+function lap_up(p) = [p, [sp_c[0] - sp_r - 5, 6, -20], [sp_c[0] - sp_r - 5, W, -10], [sp_c[0] - sp_r - 8, W, 16], [lap_port.x, 15, 30], [lap_port.x, lap_port.y - 40, lap_port.z], lap_port];
 s0       = row_c - sp_c[1][0];                                            // where the cable lands on the oval
 function wrap(n) = oval(s0 + n * sp_turn, -hold - 4 - n * cab_d);        // point after n turns
 function turns(n) = (lap_dc - plen(lap_in) - plen(lap_up(wrap(n)))) / sp_turn;
