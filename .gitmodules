@@ -1,0 +1,3 @@
+[submodule "lib/openGrid-openSCAD"]
+	path = lib/openGrid-openSCAD
+	url = https://github.com/openGrid-3D/openGrid-openSCAD
