@@ -22,7 +22,9 @@ clamp    = [[677.5, 0], [45, 55, 40]];          // monitor arm clamp at 700, low
 // items: [[x, y], [length, width, thickness], holder name, dir, (cups: [0, 1] = both ends)]
 //   dir "x": along the edge, [x, y] = left end, y on the item centre line
 //   dir "y": across the zone, [x, y] = edge-side end, x on the centre line; AC in from the trunk, DC out at the edge
-rtr_psu  = [80, 54, 33.3];                      // plug-in adapter: sits straight in strip socket 5
+rtr_psu  = [84.2, 38.2, 53, 24, 14];            // plug-in adapter (measured; plug offset and cord exit from the photo)
+rtr_sock = 4;                                   // its strip socket: in 5 it hits the strip's right holder (with the ASSUMED socket spacing)
+rtr_slot = 39;                                  // trunk slot straight in front of it
 spk_psu  = [[g0.x + 10.5 * grid, 8], [110, 50, 30], "speaker", "y"];      // ASSUMED: speaker brick, will be replaced; 1-slot holder -> cell centre
 mon_psu  = [[g0.x + 20 * grid, 8], [114.5, 51.6, 30], "monitor", "y"];    // first slot centre right of the clamp
 spool    = [22, 2, 35];                        // shir spool halves 2x2 (his default for power cords) at cell x 22, rows 0-1 and 3-4; post height
@@ -77,7 +79,7 @@ held(mon_psu) brick_vis(mon_psu[1]);
 held(lap_psu) brick_vis(lap_psu[1]);
 held(strip) strip_vis(strip[1]);
 for (i = [0:2]) plug(i);
-translate(P([sock(5), strip[0].y, -hold - strip[1].z])) wart_vis(rtr_psu);   // router adapter, body along y so socket 4 stays free
+translate(P([sock(rtr_sock), strip[0].y, -hold - strip[1].z])) rotate([0, 0, 180]) wart_vis(rtr_psu);   // body along y so the next socket stays free, cord end towards the trunk (user)
 run(trunk, 5);
 for (j = [0, 1]) translate(P([C(spool[0], j ? 3 : 2).x + (j ? spool[1] * grid : 0), C(0, j ? 3 : 2).y, -hold]))
     multmatrix(j ? [[-1, 0, 0, 0], [0, 0, -1, 0], [0, -1, 0, 0]] : [[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0]])
@@ -95,7 +97,18 @@ function slot(i) = assert(i > trunk[0] && i < trunk[0] + trunk[1] && (i - trunk[
 cable("strip cord -> wall", [end(strip, false), [1037, row_c, -hold - 30], slot(29), [1010, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
 cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95 + Rz], [300, 30, -72 + Rz], [300, 50, -72 + Rz]], "#f4f4f4", 7);
 cable("LAN router -> closet", [[350, 50, -72 + Rz], [350, 30, -72 + Rz], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
-cable("router DC",  [[sock(5), row_c + 40, -hold - strip[1].z - 25], [sock(5) + 8, 125, -50], [C(trunk[0] + trunk[1], 0).x + 12, T + 4, Tz], [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]], "#555", 4);
+// Router DC (measured 151 cm): straight into the trunk slot in front of the adapter, the slack Z-folded right there
+// (3 passes, s = fold length), out of the trunk's left end to the router.
+rtr_dc   = 1510;
+function rtr_route(s) = let(xb = C(rtr_slot, 0).x - 6) [
+    [sock(rtr_sock), strip[0].y + rtr_psu.x - rtr_psu[3] + 6, -hold - strip[1].z - rtr_psu[4]], [sock(rtr_sock), 128, -50], slot(rtr_slot),
+    [xb, T - 6, Tz], [xb - s, T - 6, Tz], [xb - s, T, Tz], [xb, T, Tz], [xb, T + 4, Tz],
+    [470, T + 4, Tz], [445, 140, Tz - 10], [420, 100, Tz - 12], [410, 40, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]];
+rtr_fold = (rtr_dc - plen(rtr_route(0))) / 2;     // each fold pass is horizontal: length grows by exactly 2 s
+assert(rtr_fold >= 0 && C(rtr_slot, 0).x - 6 - rtr_fold > C(30, 0).x + 8,    // fold stays right of the cord entries at 29/30: fill there <= ~42 %
+       str("router DC: a ", round(rtr_fold), " mm fold does not fit between slots 30 and ", rtr_slot));
+echo(str("router DC: ", round(2 * rtr_fold / 10), " cm slack Z-folded in the trunk (", round(rtr_fold / 10), " cm folds)"));
+cable("router DC", rtr_route(rtr_fold), "#555", 4);
 cable("speaker DC", [end(spk_psu, false), [spk_psu[0].x, W, -10], [spk_psu[0].x, W, 16], [440, 60, 40]], "#8e44ad", 4);
 cable("speaker AC", [end(spk_psu, true), [spk_psu[0].x, 128, -28], slot(11), [530, T - 4, Tz], [1094, T - 4, Tz], slot(32), [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#8e44ad", 5);
 // Monitor DC: up the clamp, hidden in the arm's cable channels, into the socket on the monitor back (user). Under-desk part only.

@@ -30,11 +30,11 @@ module plug_vis() color(DARK) {
     hull() { translate([0, 0, -30]) cylinder(d = 30, h = 14, $fn = 32); translate([0, 22, -26]) xrot(-90) cylinder(d = 12, h = 4, $fn = 16); }
 }
 
-// Plug-in adapter in a downward socket: s = body [x, y, z]; origin = socket face centre.
-module wart_vis(s) color(DARK) {
-    translate([0, 0, -6]) cylinder(d = 36, h = 8, $fn = 32);
-    translate([0, 0, -6 - s.z / 2]) cuboid([s.y, s.x, s.z], rounding = 3);
-    translate([0, s.x / 2 - 8, -6 - s.z / 2]) xrot(-90) cylinder(d = 4, h = 16, $fn = 12);      // DC cord out
+// Plug-in adapter in a downward socket (Europlug base sits in the socket recess); origin = socket face centre.
+// s = [length (along y), thickness, out of the socket, plug centre from the -y end, cord below the socket face]; DC cord out of the +y end.
+module wart_vis(s) color("#ececea") {
+    translate([0, -s[3], 0]) cuboid([s.y, s.x, s.z], rounding = 3, anchor = TOP + FRONT);
+    translate([0, s.x - s[3] - 1, -s[4]]) xrot(-90) cylinder(d = 5, h = 12, $fn = 12);         // strain relief
 }
 
 module clamp_vis(s) color("#141414") {
