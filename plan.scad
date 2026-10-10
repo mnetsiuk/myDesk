@@ -1,43 +1,48 @@
 // Under-desk cable plan. Corner desk: walls at back (+Y) and left (-X).
 // Positions: [x from LEFT desk edge, y from BACK edge, z from tabletop UNDERSIDE (up +)], mm.
-// Back zone (y 0..170, behind the back rail): router, bricks, strip, Underware trunk.
-// Coil bay (y 200..335, between rails): excess cable on openGrid, hidden by the rails.
-// ASSUMED values are marked; replace with measurements.
+// Everything lives in the back zone (y 0..170, between the back edge and the back rail) on screwed openGrid Full boards:
+//   edge rows (y 1..85):  power bricks + strip in Underware Item Holders (build.sh), cables go up over the back edge
+//   rail rows (y 85..169): Underware hooks for slack, Underware channel trunk to the strip
+// Run ./build.sh first (holders are imported from build/). ASSUMED values are marked.
 include <BOSL2/std.scad>       // parts.scad draws with BOSL2; its $-variables must exist at top level
 include <desk.scad>
 use <router_mount.scad>
-use <brick_holder.scad>
 use <parts.scad>
 
 show_floor = true;               // off for views from below
 show_walls = true;               // off for cut-away views from behind
-grid   = 28;                     // openGrid
+grid  = 28;                      // openGrid
+g0    = [210, 1];                // grid origin: cell (0, 0) corner
+board = 6.8;                     // openGrid Full
+hold  = board + 6.48;            // Item Holder backer: the item's top face sits this far under the tabletop
+row_c = g0.y + 2 * grid;         // edge-row item centre: on a cell boundary for the 2 Multiconnect slots
 
 clamp    = [[677.5, 0], [45, 55, 40]];          // monitor arm clamp at 700, lower jaw; height ASSUMED
-rtr_psu  = [[466, 20], [80, 54, 33.3]];
-mon_psu  = [[732, 20], [114.5, 51.6, 30]];      // next to the clamp: its DC cable is short
-lap_psu  = [[870, 20], [154, 73.5, 30]];
-spk_psu  = [[1044, 20], [110, 50, 30]];         // ASSUMED: speaker brick, will be replaced
-strip    = [[475, 95], [350, 70, 60]];          // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
-trunk    = [[830, 130], 12];                    // Underware channel: strip -> laptop + speaker AC
-bay      = [[470, 210], [20, 4]];               // openGrid tiles for cable hanks
+// items: [[x start, y centre], [length, width, thickness], holder name]
+rtr_psu  = [[466, row_c], [80, 54, 33.3], "router_psu"];
+spk_psu  = [[556, row_c], [110, 50, 30], "speaker"];          // ASSUMED: speaker brick, will be replaced
+mon_psu  = [[745, row_c], [114.5, 51.6, 30], "monitor"];      // first free spot right of the clamp: short DC cable
+lap_psu  = [[876, row_c], [154, 73.5, 30], "laptop"];
+strip    = [[1050, row_c], [350, 70, 60], "strip"];            // Brennenstuhl Eco-Line 6-way, sockets down; measure when bought
+trunk    = [9, 34];                             // Underware channel: from cell 9, 34 cells, in the last row before the rail
+boards   = [[[0, 0], [9, 6]], [[9, 0], [7, 6]], [[16, 2], [3, 4]], [[19, 0], [25, 6]]];  // [cell, size]; none under the clamp
 wall_y   = -20;                                 // ASSUMED: wall 20 mm behind the desk
 
 function P(p) = [-800 + p.x, 400 - p.y, top_z + p.z];
+function C(i, j) = [g0.x + i * grid, g0.y + j * grid];                     // plan xy of a cell corner
 function plen(p, i = 0) = i >= len(p) - 1 ? 0 : norm(p[i + 1] - p[i]) + plen(p, i + 1);
-function sock(i) = strip[0].x + strip_socket_x(i);                         // socket centre x
-function face(b, right) = [b[0].x + (right ? b[1].x : 0), b[0].y + b[1].y / 2, -b[1].z / 2];  // brick end-face centre
-function out(p, dx) = p + [dx, 0, 0];
+function sock(i) = strip[0].x + strip_socket_x(i);
+function end(b, right) = [b[0].x + (right ? b[1].x : 0), b[0].y, -hold - b[1].z / 2];   // item end-face centre
 
-// Place a part's local box [0..s] under the tabletop at plan position p.
-module at(p, s) translate([-800 + p.x, 400 - p.y - s.y, top_z - s.z]) children();
-module brick(b) {
-    at(b[0], b[1]) brick_vis(b[1]);
-    for (a = [0.15, 0.85]) color(printed()) translate([-800 + b[0].x + a * b[1].x - 7.5, 400 - b[0].y + 1, top_z]) rotate([0, 0, -90]) strap(b[1]);
+// Item hanging in its two Item Holders (one per end, cups facing each other).
+module held(b) {
+    translate(P([b[0].x, b[0].y + b[1].y / 2, -hold - b[1].z])) children();
+    for (r = [0, 1]) translate(P([b[0].x + r * b[1].x, b[0].y, -hold]))
+        multmatrix(r ? [[0, 0, -1, 0], [1, 0, 0, 0], [0, -1, 0, 0]] : [[0, 0, 1, 0], [-1, 0, 0, 0], [0, -1, 0, 0]])
+            color(printed()) import(str("build/holder_", b[2], ".stl"));
 }
 module cable(name, pts, c, d = 6) { echo(str(name, ": ", round(plen(pts) / 10), " cm")); cable_vis([for (p = pts) P(p)], c, d); }
-module plug(i, spin = 0) translate(P([sock(i), strip[0].y + strip[1].y / 2, -strip[1].z])) rotate([0, 0, spin]) plug_vis();
-module coil(p, d, c) translate(P(p)) coil_vis(d, c);
+module plug(i) translate(P([sock(i), strip[0].y, -hold - strip[1].z])) rotate([0, 0, 180]) plug_vis();   // cord towards the trunk
 
 // --- room ---
 desk();
@@ -52,31 +57,36 @@ translate([-800 + 250, 400 - wall_y - 8, 200]) {                                
     color("#cfcfcc") translate([38, -0.5, 60]) rotate([-90, 0, 0]) cylinder(d = 30, h = 1, $fn = 32);
 }
 
+// --- openGrid boards (screwed to the tabletop) ---
+for (b = boards) translate(P([C(b[0].x, b[0].y).x, C(b[0].x, b[0].y).y + b[1].y * grid, 0])) tiles_vis(b[1].x, b[1].y);
+
 // --- hardware ---
-translate([-800 + 219, 400, top_z]) mirror([0, 1, 0]) { color(printed()) pair(); router_ghost(); }   // router, x 214..456
-brick(rtr_psu);  brick(mon_psu);  brick(lap_psu);  brick(spk_psu);
-at(clamp[0], clamp[1]) clamp_vis(clamp[1]);
-at(strip[0], strip[1]) strip_vis(strip[1]);
-plug(0);  plug(3);  plug(4, -90);  plug(5, -90);
-at(trunk[0], [trunk[1] * grid, grid, 0]) { tiles_vis(trunk[1], 1); channel_vis(trunk[1]); }
-at(bay[0], [bay[1].x * grid, bay[1].y * grid, 0]) tiles_vis(bay[1].x, bay[1].y);
+// TODO: router cheeks still have screw flanges; to move onto Multiconnect, drawn one board lower for now.
+translate([-800 + 219, 400, top_z - board]) mirror([0, 1, 0]) { color(printed()) pair(); router_ghost(); }
+held(rtr_psu) brick_vis(rtr_psu[1]);
+held(spk_psu) brick_vis(spk_psu[1]);
+held(mon_psu) brick_vis(mon_psu[1]);
+held(lap_psu) brick_vis(lap_psu[1]);
+held(strip) strip_vis(strip[1]);
+for (i = [0:3]) plug(i);
+translate([-800, 400, top_z]) clamp_vis_at();
+module clamp_vis_at() translate([clamp[0].x, -clamp[0].y - clamp[1].y, -clamp[1].z]) clamp_vis(clamp[1]);
+for (k = [0:4]) translate(P([C(trunk[0] + k * 8, 5).x, C(0, 5).y + grid / 2, -3.4])) uw_channel(k < 4 ? 8 : trunk[1] - 32);
+for (x = [506, 611, 953]) translate(P([x, C(0, 4).y + grid / 2, -3.4])) uw_hook2();    // slack hooks for router / speaker / laptop DC
 
 // --- cables (echo prints each route length) ---
-W = wall_y + 8;   // cables run here, between desk and wall
-cable("strip -> wall socket", [[462, 130, -30], [461, 110, -30], [461, 60, -40], [459, 30, -50], [445, 22, -55], [390, 10, -90], [370, W, -120], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
-cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -90], [300, 30, -72], [300, 50, -72]], "#f4f4f4", 7);
-cable("LAN router -> closet", [[350, 50, -72], [350, 30, -72], [345, W, -110], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
-cable("router AC",  [[sock(0), 104, -86], [552, 80, -70], [553, 55, -30], [556, 47, -17], face(rtr_psu, true)], "#555", 5);
-cable("router DC",  [face(rtr_psu, false), [461, 47, -17], [460, 30, -35], [448, 26, -50], [420, 26, -65], [400, 32, -72], [400, 50, -72]], "#555", 4);
-cable("monitor AC", [[sock(3), 104, -86], [720, 88, -80], [850, 80, -50], [858, 50, -18], face(mon_psu, true)], "#d03a3a", 5);
-cable("monitor DC", [face(mon_psu, false), [726, 45, -15], [726, 10, -15], [726, W, -8], [720, W, 20], [712, W, 250]], "#d03a3a", 4);
-cable("laptop AC",  [[sock(4) + 26, 130, -86], [778, 128, -96], [800, 126, -96], [822, 138, -50], [840, 144, -14], [1020, 144, -14], [1036, 110, -15], out(face(lap_psu, true), 12), face(lap_psu, true)], "#f07a2a", 6);
-cable("laptop DC",  [face(lap_psu, false), [860, 57, -15], [858, W, -8], [855, W, 20], [850, 30, 35], [800, 230, 70]], "#f07a2a", 5);
-cable("speaker AC", [[sock(5) + 26, 130, -86], [825, 135, -60], [840, 150, -14], [1160, 150, -14], [1175, 100, -15], out(face(spk_psu, true), 14), face(spk_psu, true)], "#8e44ad", 5);
-cable("speaker DC", [face(spk_psu, false), [1034, 45, -15], [1034, W, -8], [1030, W, 20], [1000, 15, 20], [600, 15, 20], [520, 90, 40]], "#8e44ad", 4);
-
-// Excess of fixed cables: loops + velcro, clipped to the bay tiles.
-coil([540, 266, -4], 100, "#1b1b1b");  // strip cord
-coil([670, 266, -4], 90, "#555");      // router DC
-coil([800, 266, -4], 100, "#f07a2a");  // laptop DC
-coil([930, 266, -4], 90, "#8e44ad");   // speaker DC
+W  = wall_y + 8;       // between desk and wall
+T  = C(0, 5).y + 14;   // trunk centre line
+Tz = -board - 9;       // inside the trunk
+Rz = -board;           // router drawn one board lower
+cable("strip cord -> wall", [end(strip, false), [1040, row_c, -hold - 30], [1040, 140, Tz], [1030, T, Tz], [470, T, Tz], [440, 140, Tz - 10], [400, 100, Tz - 12], [380, 30, -30], [370, W, -60], [362, W, -330], [360, W, -349]], "#1b1b1b", 7);
+cable("coax wall -> router",  [[288, W, -504], [290, W, -150], [295, 10, -95 + Rz], [300, 30, -72 + Rz], [300, 50, -72 + Rz]], "#f4f4f4", 7);
+cable("LAN router -> closet", [[350, 50, -72 + Rz], [350, 30, -72 + Rz], [345, W, -115], [340, W, -740], [300, W, -760], [60, W, -760]], "#3b82f6");
+cable("router DC",  [end(rtr_psu, false), [461, row_c, -30], [461, 40, -30], [452, 26, -45], [420, 26, -60 + Rz], [400, 32, -72 + Rz], [400, 50, -72 + Rz]], "#555", 4);
+cable("router AC",  [end(rtr_psu, true), [551, row_c, -30], [551, 100, -30], [553, T - 5, Tz], [1120, T, Tz], [sock(0), 110, -90], [sock(0), 83, -hold - 86]], "#555", 5);
+cable("speaker DC", [end(spk_psu, false), [552, row_c, -28], [552, 20, -20], [552, W, -10], [552, W, 16], [520, 60, 40]], "#8e44ad", 4);
+cable("speaker AC", [end(spk_psu, true), [671, row_c, -28], [672, 100, -28], [675, T, Tz], [1165, T, Tz], [sock(1), 110, -90], [sock(1), 83, -hold - 86]], "#8e44ad", 5);
+cable("monitor DC", [end(mon_psu, false), [738, row_c, -28], [730, 25, -20], [728, W, -10], [720, W, 20], [712, W, 250]], "#d03a3a", 4);
+cable("monitor AC", [end(mon_psu, true), [868, row_c, -28], [868, 100, -28], [870, T, Tz], [1210, T, Tz], [sock(2), 110, -90], [sock(2), 83, -hold - 86]], "#d03a3a", 5);
+cable("laptop DC",  [end(lap_psu, false), [871, row_c, -28], [871, 20, -20], [868, W, -10], [865, W, 16], [850, 30, 35], [800, 230, 70]], "#f07a2a", 5);
+cable("laptop AC",  [end(lap_psu, true), [1038, row_c, -28], [1040, 100, -28], [1044, T, Tz], [1255, T, Tz], [sock(3), 110, -90], [sock(3), 83, -hold - 86]], "#f07a2a", 6);

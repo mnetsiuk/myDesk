@@ -1,5 +1,5 @@
 // Plan seen from BELOW (like lying under the desk, wall at the bottom of the image), labelled. Render:
-// openscad -o topology.png --imgsize=3600,2000 --projection=o --camera=-130,250,700,180,0,0,1450 topology.scad
+// openscad -o topology.png --imgsize=3600,1700 --projection=o --camera=0,300,700,180,0,0,1480 topology.scad
 include <../plan.scad>
 show_floor = false;
 show_walls = false;
@@ -8,14 +8,14 @@ module label(s, p, sz = 11, c = "Black") color(c) translate([-800 + p.x, 400 - p
     text(s, size = sz, font = "DejaVu Sans:style=Bold", halign = "center", valign = "center");
 
 label("роутер", [335, 145], 16);  label("лежить під балкою", [335, 120], 10);
-label("БЖ роутера", [506, 47], 8, "White");
-label("БЖ монітора", [789, 46], 9, "White");
-label("БЖ ноутбука", [947, 57], 10, "White");
-label("БЖ колонки", [1099, 45], 9, "White");
-label("подовжувач, розетки вниз", [650, 112], 10, "White");
-label("Underware: живлення ноутбука і колонки", [998, 175], 9);
-label("запас кабелів петлями на плитках openGrid", [740, 362]);
-label("(між балками, збоку не видно)", [740, 345], 9);
-label("вниз по стіні: подовжувач → розетка, коаксіал, LAN → шафа", [420, -42], 10);
-label("вгору за край стола: монітор (по кронштейну), ноутбук, колонка", [950, -42], 10);
-label("↓ стіна", [650, -65], 10);
+label("БЖ роутера", [506, 57], 7, "White");
+label("БЖ колонки", [611, 57], 8, "White");
+label("БЖ монітора", [802, 57], 8, "White");
+label("БЖ ноутбука", [953, 57], 9, "White");
+label("подовжувач", [1340, 40], 9, "White");
+label("канал Underware: живлення від БЖ → подовжувач, шнур подовжувача → розетка", [930, 190], 10);
+label("гачки Underware для запасу кабелів", [780, 127], 8);
+label("плити openGrid Full на шурупах; блоки й подовжувач у тримачах Item Holder на засувках Multiconnect", [930, 225], 9);
+label("вниз по стіні: подовжувач → розетка, коаксіал, LAN → шафа", [400, -42], 10);
+label("вгору за край: монітор (по кронштейну), колонка, ноутбук", [1000, -42], 10);
+label("■ струбцина", [700, -62], 9);

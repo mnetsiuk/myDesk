@@ -2,7 +2,6 @@
 // [0..s.x] x [0..s.y] x [0..s.z]; plan.scad places that box under the tabletop.
 include <BOSL2/std.scad>
 use <lib/QuackWorks/openGrid/openGrid.scad>
-use <lib/openGrid-openSCAD/beta/monokini/monokini_I_channel.scad>
 
 PRINTED = "#7385e6";   // everything we print
 function printed() = PRINTED;
@@ -50,10 +49,17 @@ module coil_vis(d, c, cd = 5) {
     color(PRINTED) translate([d / 2 - 8, -8, -1]) cube([16, 16, 1]);                         // clip on the tile
 }
 
-// openGrid Lite tile field, n x m cells, top at z = 0.
-module tiles_vis(n, m) color("#d9d9d9") intersection() {          // the library needs >= 2 cells per side
-    openGridLite(Board_Width = max(n, 2), Board_Height = max(m, 2), anchor = TOP + LEFT + FRONT);
+// openGrid Full board, n x m cells, top at z = 0 (6.8 mm thick).
+module tiles_vis(n, m) color("#dcdcda") intersection() {          // the library needs >= 2 cells per side
+    openGrid(Board_Width = max(n, 2), Board_Height = max(m, 2), Tile_Thickness = 6.8, anchor = TOP + LEFT + FRONT);
     translate([0, 0, -10]) cube([n * 28, m * 28, 10]);
 }
-// Underware monokini channel along +x hanging from a tile row, open side up into the tile.
-module channel_vis(cells) color(PRINTED) translate([0, 14, -2]) monokiniChannel(lengthMM = cells * 28, anchor = TOP + LEFT, spin = 90);
+
+// Vendored Underware for openGrid parts (lib/underware-opengrid), normalised: grips up with their tips at z = 0.
+// Place them 3.4 mm under the board's top face so the grips sit inside a 6.8 mm board.
+UW = "lib/underware-opengrid/";
+// Straight channel, n cells (1..8) along +x from x = 0, centred on y = 0.
+module uw_channel(n) color(PRINTED) translate([0, 0, -22]) rotate([0, 0, -90]) translate([-30 * (n - 1), 28, 0])
+    import(str(UW, "3mf/openGrid Underware ", n, "x Channel.3mf"));
+// Double-sided cable hook, 2 cells wide, centred.
+module uw_hook2() color(PRINTED) translate([0, 7.3, -28]) import(str(UW, "stl/openGrid Underware Hook - Double-Sided 2W 10mm Cable.stl"));
