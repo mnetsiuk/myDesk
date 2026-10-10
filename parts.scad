@@ -30,6 +30,13 @@ module plug_vis() color(DARK) {
     hull() { translate([0, 0, -30]) cylinder(d = 30, h = 14, $fn = 32); translate([0, 22, -26]) xrot(-90) cylinder(d = 12, h = 4, $fn = 16); }
 }
 
+// Angled IEC plug (C5/C7/C13) in a brick's end face: p = [face width (y), face height (z), out along +x]; origin = face centre.
+// Its cord leaves near the far end towards -y (= towards the trunk in plan.scad).
+module iec_vis(p) color(DARK) {
+    cuboid([p[2], p[0], p[1]], rounding = 2, anchor = LEFT);
+    translate([p[2] - 7, -p[0] / 2 + 1, 0]) xrot(90) cylinder(d = 7, h = 10, $fn = 14);       // strain relief
+}
+
 // Plug-in adapter in a downward socket (Europlug base sits in the socket recess); origin = socket face centre.
 // s = [length (along y), thickness, out of the socket, plug centre from the -y end, cord below the socket face]; DC cord out of the +y end.
 module wart_vis(s) color("#ececea") {

@@ -5,16 +5,18 @@ cd "$(dirname "$0")"
 mkdir -p build
 H=lib/QuackWorks/Underware/Underware_Item_Holder.scad
 
-# Underware Item Holder on openGrid (Multiconnect back), two per item: one at each end, cord slot in the base.
-# holder <name> <item width> <item thickness> <cup depth> <cord slot>
+# Underware Item Holder on openGrid (Multiconnect back): ClamShell_Mode pair, one cup per end, spaced so both snaps land on the grid.
+# Cord slot through the end wall and the open underside, wide enough for the angled IEC plug body (largest face side + 1).
+# holder <name> <item length> <item width + 1> <item thickness + 1> <cord slot> [slot shift towards the board]
 holder() {
-    openscad -q -o build/holder_$1.stl -D 'Mounting_Surface="openGrid"' \
-        -D Internal_Width=$2 -D Internal_Height=$3 -D Internal_Depth=$4 -D cordCutout=true -D cordCutoutDiameter=$5 $H
+    openscad -q -o build/holder_$1.stl -D 'Mounting_Surface="openGrid"' -D ClamShell_Mode=true -D total_item_width=$2 \
+        -D Internal_Width=$3 -D Internal_Height=$4 -D Internal_Depth=25 -D cordCutout=true -D cordCutoutDiameter=$5 \
+        -D cordCutoutDepthOffset=-${6:-0} $H
 }
-holder laptop     74.5 31   25 12   # 154 x 73.5 x 30
-holder monitor    52.6 31   25 12   # 114.5 x 51.6 x 30
-holder speaker    51   31   25 12   # ASSUMED 110 x 50 x 30, brick will be replaced
-holder strip      71   61   25 12   # Brennenstuhl Eco-Line 350 x 70 x 60, cord end; measure when bought
+holder laptop  154   74.5 31 28      # 154 x 73.5 x 30, C13 plug (21 x 27 ASSUMED)
+holder monitor 114.5 52.6 31 28      # 114.5 x 51.6 x 30, C13 plug
+holder speaker 110   51   31 22      # ASSUMED 110 x 50 x 30, brick will be replaced; C5 plug (16 x 21 ASSUMED)
+holder strip   360   91   66 14 20   # Brennenstuhl Eco-Line datasheet 360 x 90 x 65; cord leaves the end face near the base (ASSUMED)
 
 # shir's cord spool (lib/spool-shir), one half 2x2 (his size for power cords), post 35 mm = his default; two halves face each other
 openscad -q -o build/spool_2x2.stl -D Slots_X=2 -D Slots_Y=2 -D Spool_Height=35 lib/spool-shir/underware-cord-spool.scad
