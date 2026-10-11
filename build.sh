@@ -16,7 +16,7 @@ holder() {
 holder laptop  154   74.5 31 28      # 154 x 73.5 x 30, C13 plug (21 x 27 ASSUMED)
 holder monitor 114.5 52.6 31 28      # 114.5 x 51.6 x 30, C13 plug
 holder speaker 110   51   31 22      # ASSUMED 110 x 50 x 30, brick will be replaced; C5 plug (16 x 21 ASSUMED)
-holder strip   360   91   66 14 20   # Brennenstuhl Eco-Line datasheet 360 x 90 x 65; cord leaves the end face near the base (ASSUMED)
+holder strip   340   59   49 14 12   # Brennenstuhl Eco-Line 340 x 58 x 48 (seller's drawing); cord leaves the end face near the base (ASSUMED)
 
 # shir's cord spool (lib/spool-shir), one half 2x2 (his size for power cords), post 35 mm = his default; two halves face each other
 openscad -q -o build/spool_2x2.stl -D Slots_X=2 -D Slots_Y=2 -D Spool_Height=35 lib/spool-shir/underware-cord-spool.scad

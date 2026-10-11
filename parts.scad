@@ -17,12 +17,12 @@ module strip_vis(s, n = 6) {
     module slab(w, z) translate([0, (s.y - w) / 2, z]) linear_extrude(1) offset(r = 8) offset(delta = -8) square([s.x, w]);
     color("#2b2c2e") difference() {
         hull() { slab(s.y - 18, 0); slab(s.y, s.z - 1); }
-        for (i = [0:n - 1]) translate([80 + i * 46, s.y / 2, -1]) cylinder(d = 38, h = 16, $fn = 40);
+        for (i = [0:n - 1]) translate([strip_socket_x(i), s.y / 2, -1]) cylinder(d = 38, h = 16, $fn = 40);
     }
     color("#3fbf5f") translate([30, s.y / 2 - 10, -2]) cube([18, 20, 3]);                       // switch
     color(DARK) translate([-12, s.y / 2, s.z / 2]) yrot(90) cylinder(d = 9, h = 13, $fn = 16);    // cord
 }
-function strip_socket_x(i) = 80 + i * 46;
+function strip_socket_x(i) = 88 + i * 44;   // from the cord end, seller's drawing
 
 // Angled Schuko plug in a downward socket; local origin = socket face centre, cord leaves along +y.
 module plug_vis() color(DARK) {
